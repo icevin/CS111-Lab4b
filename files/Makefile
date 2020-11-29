@@ -1,10 +1,9 @@
-#NAME: Kevin Tang
-#EMAIL: kevintang2023@ucla.edu
-#ID: 805419480
+# NAME: Kevin Tang
+# EMAIL: kevintang2023@ucla.edu
+# ID: 805419480
 
-default: build
-
-build:
+default: 
+	gcc -g -Wall -Wextra lab4b.c -o lab4b
 
 dist: lab4b.tgz
 submission_files =  Makefile README
