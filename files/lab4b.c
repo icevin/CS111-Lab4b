@@ -64,6 +64,9 @@ int main(int argc, char** argv) {
         int opt_index = 0;
         int c        = getopt_long(argc, argv, "", options, &opt_index);
 
+        if (c == -1)
+            break;  
+
         switch (c) {
             case 1:
                 opt_period = atoi(optarg);
