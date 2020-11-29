@@ -91,6 +91,7 @@ int main(int argc, char** argv) {
                 break;
 
             default:
+                fprintf(stderr, "the case is: %d", c);
                 fprintf(stderr, "Try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
                 exit(1);
                 break;
