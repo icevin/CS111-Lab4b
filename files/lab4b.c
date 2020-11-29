@@ -54,10 +54,10 @@ int main(int argc, char** argv) {
     // Process args
     static const struct option options[] =
         {
-            {"period", required_argument, NULL, 'p'},
-            {"scale", required_argument, NULL, 's'},
-            {"log", required_argument, NULL, 'l'},
-            {"debug", no_argument, NULL, 'd'},
+            {"period", required_argument, NULL, 1},
+            {"scale", required_argument, NULL, 2},
+            {"log", required_argument, NULL, 3},
+            {"debug", no_argument, NULL, 4},
             {0, 0, 0, 0}};
 
     for (;;) {
@@ -65,19 +65,18 @@ int main(int argc, char** argv) {
         int c        = getopt_long(argc, argv, "", options, &opt_index);
 
         switch (c) {
-            case 'p':
+            case 1:
                 opt_period = atoi(optarg);
                 break;
-            case 's':
+            case 2:
                 if (strcmp(optarg, "F") == 0)
                     opt_scale = 0;
                 else if (strcmp(optarg, "S") == 0)
                     opt_scale = 1;
                 else
                     fprintf(stderr, "Try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
-
                 break;
-            case 'l':
+            case 3:
                 opt_log  = 1;
                 opt_file = fopen(optarg, "a+");
                 if (opt_file == NULL) {
@@ -86,7 +85,7 @@ int main(int argc, char** argv) {
                 }
                 break;
 
-            case 'd':
+            case 4:
                 opt_debug = 1;
                 break;
             default:
