@@ -62,11 +62,7 @@ int main(int argc, char** argv) {
 
     for (;;) {
         int opt_index = 0;
-        char c        = getopt_long(argc, argv, "", options, &opt_index);
-
-        if (c == -1) {
-            break;
-        }
+        int c        = getopt_long(argc, argv, "", options, &opt_index);
 
         switch (c) {
             case 'p':
