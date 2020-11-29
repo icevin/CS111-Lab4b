@@ -69,12 +69,13 @@ int main(int argc, char** argv) {
                 opt_period = atoi(optarg);
                 break;
             case 2:
-                if (strcmp(optarg, "F") == 0)
+                if (strcmp(optarg, "F") == 0) {
                     opt_scale = 0;
-                else if (strcmp(optarg, "S") == 0)
+                } else if (strcmp(optarg, "S") == 0) {
                     opt_scale = 1;
-                else
-                    fprintf(stderr, "Try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
+                } else {
+                    fprintf(stderr, "THIS ONE Try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
+                }
                 break;
             case 3:
                 opt_log  = 1;
@@ -88,6 +89,7 @@ int main(int argc, char** argv) {
             case 4:
                 opt_debug = 1;
                 break;
+
             default:
                 fprintf(stderr, "Try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
                 exit(1);
