@@ -9,7 +9,11 @@ buildtest:
 	gcc -g -Wall -Wextra lab4b.c -o lab4b -D PC -lm
 
 dist: lab4b.tgz
-submission_files =  Makefile README lab4b.c test.sh
+submission_files = Makefile README lab4b.c test.sh
+
+check:
+	chmod +x test.sh
+	./test.sh
 
 lab4b.tgz: $(submission_files)
 	tar -czf lab4b-805419480.tar.gz $(submission_files)
