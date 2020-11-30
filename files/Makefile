@@ -3,7 +3,7 @@
 # ID: 805419480
 
 default: 
-	gcc -g -Wall -Wextra lab4b.c -o lab4b -lm
+	gcc -g -Wall -Wextra lab4b.c -o lab4b -lmraa -lm
 
 buildtest:
 	gcc -g -Wall -Wextra lab4b.c -o lab4b -D PC -lm
