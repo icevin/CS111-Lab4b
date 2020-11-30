@@ -4,7 +4,7 @@
 
 #include <getopt.h>
 #include <math.h>
-// #include <mraa.h>
+
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -17,6 +17,12 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifndef PC
+#include <mraa.h>
+mraa_aio_context grove_sensor;
+mraa_gpio_context grove_button;
+#endif
+
 // argument options
 int opt_period = 1;
 int opt_scale  = 0;  // 0 = F, 1 = C
@@ -28,11 +34,6 @@ int opt_debug  = 0;
 int opt_report = 1;
 
 #define INPUT_SIZE 1023
-
-#ifndef PC
-mraa_aio_context grove_sensor;
-mraa_gpio_context grove_button;
-#endif
 
 // Some help from https://www.tutorialspoint.com/c_standard_library/c_function_localtime.htm
 struct tm * time_info;
