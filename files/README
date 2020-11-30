@@ -3,3 +3,16 @@ EMAIL: kevintang2023@ucla.edu
 ID: 805419480
 
 CS111 Project 4B: Sensor Input
+
+Makefile:
+    Make file with following targets:
+        default: build on beaglebone
+        buildtest: build w/ placeholder functions to build on non-beaglebone devices
+        dist: make dist tar.gz
+        clean: remove files produced by makefile targets
+
+README:
+    This file!
+
+lab4b.c:
+    C source file for program that implements basic temperature monitoring using beaglebone
