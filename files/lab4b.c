@@ -17,17 +17,19 @@
 #include <time.h>
 #include <unistd.h>
 
+// argument options
 int opt_period = 1;
 int opt_scale  = 0;  // 0 = F, 1 = C
 int opt_log    = 0;
 FILE *opt_file   = 0;
 int opt_debug  = 0;
 
+// stdin Options
 int opt_report = 1;
 
-#define INPUT_SIZE 1024
+#define INPUT_SIZE 1023
 
-#ifdef BEAGLEBONE
+#ifndef PC
 mraa_aio_context grove_sensor;
 mraa_gpio_context grove_button;
 #endif
@@ -35,6 +37,8 @@ mraa_gpio_context grove_button;
 // Some help from https://www.tutorialspoint.com/c_standard_library/c_function_localtime.htm
 struct tm * time_info;
 struct timeval time_now;
+time_t last_report;
+time_t current;
 
 void log_and_print(char* string) {
     if (opt_log != 0) {
@@ -48,6 +52,60 @@ void button_shutdown() {
     char temp[128];
     time_info = localtime(&time_now.tv_sec);
     sprintf(temp, "%02d:%02d:%02d SHUTDOWN", time_info->tm_hour, time_info->tm_min, time_info->tm_sec);
+    log_and_print(temp);
+    if (opt_log)
+        fclose(opt_file);
+
+    #ifndef PC
+    mraa_aio_close(grove_sensor);
+    mraa_gpio_close(grove_button);
+    #endif
+    exit(0);
+}
+
+double parse_reading(int reading) {
+    // https://wiki.seeedstudio.com/Grove-Temperature_Sensor_V1.2/
+    const double B = 4275.;
+    const double R0 = 100000.;
+    double t = 1023.0 / (double) reading - 1.0;
+    t = R0 * t;
+    double log_result = log(t / R0);
+    double temperature = 1.0/(log_result/B+1/298.15)-273.15; // Convert to temperature via datasheet
+    
+    if (opt_scale == 0) // F
+    {
+        return (temperature * 9. / 5.) + 32;
+    } else {
+        return temperature;
+    }
+    
+}
+
+// option_string is a \0 terminated string w/ one of the options
+void parse_option(char* option_string) {
+    if (opt_log != 0) {
+        fprintf(opt_file, "%s\n", option_string);
+        fflush(opt_file);
+    }
+    if (strcmp(option_string, "SCALE=F") == 0) {
+        opt_scale = 0;
+    } else if (strcmp(option_string, "SCALE=C") == 0) {
+        opt_scale = 1;
+    } else if (strcmp(option_string, "STOP") == 0) {
+        opt_report = 0;
+    } else if (strcmp(option_string, "START") == 0) {
+        opt_report = 1;
+    } else if (strcmp(option_string, "OFF") == 0) {
+        button_shutdown();
+    } else {
+        char* found_period = strstr(option_string, "PERIOD=");
+        if (found_period != NULL)
+        {
+            // move found_period to beginning of arg
+            found_period += 7;
+        }
+        
+    }
 }
 
 int main(int argc, char** argv) {
@@ -74,10 +132,11 @@ int main(int argc, char** argv) {
             case 2:
                 if (strcmp(optarg, "F") == 0) {
                     opt_scale = 0;
-                } else if (strcmp(optarg, "S") == 0) {
+                } else if (strcmp(optarg, "C") == 0) {
                     opt_scale = 1;
                 } else {
-                    fprintf(stderr, "THIS ONE Try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
+                    fprintf(stderr, "Invalid scale argument, try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
+                    exit(1);
                 }
                 break;
             case 3:
@@ -94,21 +153,26 @@ int main(int argc, char** argv) {
                 break;
 
             default:
-                fprintf(stderr, "the case is: %d", c);
                 fprintf(stderr, "Try \"lab4b [--period=<seconds>] [--log=<log_filename>] [--scale=F/C] [--debug]\"\n\n");
                 exit(1);
                 break;
         }
     }
 
-    #ifdef BEAGLEBONE
+    #ifndef PC
     grove_sensor = mraa_aio_init(1);
     grove_button = mraa_gpio_init(60);
+    if (grove_sensor == NULL || grove_button == NULL)
+    {
+        fprintf(stderr, "Error: failed to initialize sensors. errno %d: %s\r\n", errno, strerror(errno));
+        exit(1);
+    }
+    
     mraa_gpio_dir(grove_button, MRAA_GPIO_IN);
-    mraa_gpio_isr(grove_button, MRAA_GPIO_EDGE_RISING, &button_shutdown, NULL)
+    mraa_gpio_isr(grove_button, MRAA_GPIO_EDGE_RISING, &button_shutdown, NULL);
     #endif
 
-    char buffer[INPUT_SIZE];
+    char buffer[INPUT_SIZE + 1];
 
     struct pollfd poll_fd;
     poll_fd.fd     = STDIN_FILENO;
@@ -117,8 +181,26 @@ int main(int argc, char** argv) {
     int poll_rc = 0;
     int read_rc = 0;
 
+    time(&last_report);
+    time(&current);
+
     for (;;) {
+        time(&current);
         gettimeofday(&time_now, 0);
+
+        if (opt_report == 1 && difftime(current, last_report) >= (double) opt_period) {
+            time_info = localtime(&time_now.tv_sec);
+            #ifndef PC
+            int sensor_reading = mraa_aio_read(grove_sensor);
+            #else
+            int sensor_reading = 100;
+            #endif
+            float temperature = parse_reading(sensor_reading);
+            char temp[128];
+            sprintf(temp, "%02d:%02d:%02d %.1f", time_info->tm_hour, time_info->tm_min, time_info->tm_sec, temperature);
+            log_and_print(temp);
+            time(&last_report);
+        }
 
         poll_rc = poll(&poll_fd, 1, 0);
         if (poll_rc < 0) {
@@ -132,6 +214,22 @@ int main(int argc, char** argv) {
                 fprintf(stderr, "Error reading. errno %d: %s\r\n", errno, strerror(errno));
                 exit(1);
             }
+            
+            // lex input
+            buffer[read_rc] = '\0';
+
+            char* head = &buffer[0];
+
+            // Ignore whitespace
+            while(*head != '\0') {
+                while(*head == ' ' || *head == '\t')
+                    head++;
+
+                char* find_period = 
+            }
+
+            
+
         }
 
     }
@@ -139,4 +237,9 @@ int main(int argc, char** argv) {
     if (opt_log) {
         fclose(opt_file);
     }
+
+    #ifndef PC
+    mraa_aio_close(grove_sensor);
+    mraa_gpio_close(grove_button);
+    #endif
 }
