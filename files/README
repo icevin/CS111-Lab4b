@@ -8,6 +8,7 @@ Makefile:
     Make file with following targets:
         default: build on beaglebone
         buildtest: build w/ placeholder functions to build on non-beaglebone devices
+        check: runs automated smoke-test
         dist: make dist tar.gz
         clean: remove files produced by makefile targets
 
@@ -16,3 +17,6 @@ README:
 
 lab4b.c:
     C source file for program that implements basic temperature monitoring using beaglebone
+
+test.sh:
+    Test script used by make check target

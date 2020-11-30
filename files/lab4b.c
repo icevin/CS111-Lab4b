@@ -102,9 +102,19 @@ void parse_option(char* option_string) {
         if (found_period != NULL)
         {
             // move found_period to beginning of arg
+            // technically not needed for atoi(), but why not
             found_period += 7;
+            opt_period = atoi(found_period);
+            return;
         }
-        
+        // We don't technically need to look for LOG <message> since all non-valid commands are automatically outputted anyways
+        // We just find it and do nothing
+        char* found_log = strstr(option_string, "LOG ");
+        if (found_log != NULL)
+        {
+            // move found_log to beginning of arg
+            found_period += 4;
+        }
     }
 }
 
@@ -225,7 +235,15 @@ int main(int argc, char** argv) {
                 while(*head == ' ' || *head == '\t')
                     head++;
 
-                char* find_period = 
+                char* tail = strstr(head, "\n");
+                
+                int size = tail - head;
+                char* arg_buffer = (char*) malloc((size + 1) * sizeof(char));
+                strncpy(arg_buffer, head, size);
+                arg_buffer[size] = '\0';
+                parse_option(arg_buffer);
+                free(arg_buffer);
+                head = tail + 1;
             }
 
             
