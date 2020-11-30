@@ -19,6 +19,7 @@
 
 #ifndef PC
 #include <mraa.h>
+#include <mraa/aio.h>
 mraa_aio_context grove_sensor;
 mraa_gpio_context grove_button;
 #endif
