@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
     if (grove_sensor == NULL || grove_button == NULL)
     {
         fprintf(stderr, "Error: failed to initialize sensors. errno %d: %s\r\n", errno, strerror(errno));
-        // exit(1);
+        exit(1);
     }
     
     mraa_gpio_dir(grove_button, MRAA_GPIO_IN);
